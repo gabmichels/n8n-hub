@@ -1,0 +1,8 @@
+{
+    admin off
+}
+
+# Local development configuration
+{$N8N_HOST:localhost} {
+    reverse_proxy n8n:5678
+}

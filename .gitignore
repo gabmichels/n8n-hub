@@ -1,0 +1,19 @@
+# Environment variables
+.env
+.env.*.local
+.DS_Store # macOS specific
+
+# Docker
+*.log
+volumes/
+config/caddy/data/
+config/caddy/config/
+
+# n8n
+.n8n/
+# Keep workflows/README.md but ignore everything else in workflows/
+!/workflows/README.md
+/workflows/*
+
+# OS generated files
+Thumbs.db

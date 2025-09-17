@@ -1,0 +1,113 @@
+services:
+  n8n:
+    image: n8nio/n8n
+    restart: unless-stopped
+    environment:
+      # Core n8n configuration
+      - N8N_HOST=${N8N_HOST}
+      - N8N_PORT=${N8N_PORT}
+      - N8N_PROTOCOL=${N8N_PROTOCOL}
+      - WEBHOOK_URL=${WEBHOOK_URL}
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE}
+      
+      # Basic Auth (optional)
+      - N8N_BASIC_AUTH_ACTIVE=${N8N_BASIC_AUTH_ACTIVE}
+      - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD}
+      
+      # Node.js function permissions
+      - NODE_FUNCTION_ALLOW_BUILTIN=*
+      - NODE_FUNCTION_ALLOW_EXTERNAL=crypto,uuid
+      
+      # Database configuration
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=${POSTGRES_DB}
+      - DB_POSTGRESDB_USER=${POSTGRES_USER}
+      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
+      
+      # Logging
+      - N8N_LOG_LEVEL=info
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - n8n_network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:5678/healthz || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles:
+      - local
+      - prod
+
+  # Local development - expose n8n port directly
+  n8n-exposed:
+    extends: n8n
+    ports:
+      - "5678:5678"
+    profiles:
+      - local
+
+  postgres:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - n8n_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    profiles:
+      - local
+      - prod
+
+  caddy:
+    image: caddy:2.7.5-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      - N8N_HOST=${N8N_HOST}
+      - CADDY_EMAIL=${CADDY_EMAIL}
+      - PUBLIC_DOMAIN=${PUBLIC_DOMAIN}
+    networks:
+      - n8n_network
+    depends_on:
+      n8n:
+        condition: service_healthy
+    profiles:
+      - local
+      - prod
+
+volumes:
+  n8n_data:
+    name: n8n_data
+  postgres_data:
+    name: postgres_data
+  caddy_data:
+    name: caddy_data
+  caddy_config:
+    name: caddy_config
+
+networks:
+  n8n_network:
+    driver: bridge
