@@ -38,8 +38,7 @@ services:
 
       # ZENITHFALL_API_URL
       - OBSIDIAN_VAULT_PATH=/vault/Zenithfall
-      - ZENITHFALL_API_URL= http://host.docker.internal:3000
-      #- ZENITHFALL_API_URL= https://rag-api-131375452585.europe-west3.run.app
+      - ZENITHFALL_API_URL=https://rag-api-131375452585.europe-west3.run.app
       - ZENITHFALL_INGEST_TOKEN=zenithfall-secure-token-2024
       - BATCH_SIZE=10
       - MAX_FILES_PER_RUN=250
@@ -48,7 +47,6 @@ services:
       - N8N_LOG_LEVEL=info
     volumes:
       - n8n_data:/home/node/.n8n
-      - "C:/Users/gabmi/OneDrive/Documents/Zenithfall/:/vault/Zenithfall:ro"
     networks:
       - n8n_network
     healthcheck:
