@@ -3,11 +3,11 @@
 # It's automatically loaded by docker compose in development
 
 services:
-  n8n:
+  n8n-hub:
     environment:
       # Development logging
       - N8N_LOG_LEVEL=debug
       - NODE_ENV=development
-  
+
   # Note: n8n-exposed service handles port exposure in local profile
   # No need to duplicate port configuration here

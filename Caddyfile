@@ -4,5 +4,5 @@
 
 # Local development configuration
 {$N8N_HOST:localhost} {
-    reverse_proxy n8n:5678
+    reverse_proxy n8n-hub:5678
 }
