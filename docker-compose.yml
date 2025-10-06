@@ -38,7 +38,7 @@ services:
 
       # ZENITHFALL_API_URL
       - OBSIDIAN_VAULT_PATH=/vault/Zenithfall
-      - ZENITHFALL_API_URL=https://rag-api-131375452585.europe-west3.run.app
+      - ZENITHFALL_API_URL=https://rag-api-131375452585.europe-west4.run.app
       - ZENITHFALL_INGEST_TOKEN=zenithfall-secure-token-2024
       - TENANT_ID=zenithfall
       - BATCH_SIZE=10
