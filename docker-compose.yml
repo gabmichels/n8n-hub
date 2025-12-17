@@ -49,7 +49,7 @@ services:
     volumes:
       - n8n_data:/home/node/.n8n
     networks:
-      - n8n_network
+      - infra_network
     healthcheck:
       test:
         ["CMD-SHELL", "wget -q -O - http://localhost:5678/healthz || exit 1"]
@@ -81,10 +81,14 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - FIDER_DB_USER=${FIDER_DB_USER:-fider}
+      - FIDER_DB_PASSWORD=${FIDER_DB_PASSWORD:-changeme}
+      - FIDER_DB_NAME=${FIDER_DB_NAME:-fider}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./config/postgres:/docker-entrypoint-initdb.d:ro
     networks:
-      - n8n_network
+      - infra_network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 10s
@@ -93,6 +97,44 @@ services:
     profiles:
       - local
       - prod
+
+  fider:
+    image: getfider/fider:stable
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.2"
+          memory: 256M
+    environment:
+      - DATABASE_URL=postgres://${FIDER_DB_USER:-fider}:${FIDER_DB_PASSWORD:-changeme}@postgres:5432/${FIDER_DB_NAME:-fider}?sslmode=disable
+      - BASE_URL=${FIDER_BASE_URL:-http://localhost:3000}
+      - JWT_SECRET=${FIDER_JWT_SECRET:-please-change-this-secret}
+      - EMAIL_NOREPLY=${FIDER_EMAIL_NOREPLY:-noreply@localhost}
+      - EMAIL_SMTP_HOST=${FIDER_EMAIL_SMTP_HOST:-smtp.disabled}
+      - EMAIL_SMTP_PORT=${FIDER_EMAIL_SMTP_PORT:-587}
+      - EMAIL_SMTP_USERNAME=${FIDER_EMAIL_SMTP_USERNAME:-disabled}
+      - EMAIL_SMTP_PASSWORD=${FIDER_EMAIL_SMTP_PASSWORD:-disabled}
+      - EMAIL_SMTP_ENABLE_STARTTLS=${FIDER_EMAIL_SMTP_ENABLE_STARTTLS:-false}
+    networks:
+      - infra_network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles:
+      - local
+      - prod
+    ports:
+      - "3015:3000"
 
   caddy:
     image: caddy:2.7.5-alpine
@@ -108,8 +150,10 @@ services:
       - N8N_HOST=${N8N_HOST}
       - CADDY_EMAIL=${CADDY_EMAIL}
       - PUBLIC_DOMAIN=${PUBLIC_DOMAIN}
+      - POSTHOG_PROXY_HOST=${POSTHOG_PROXY_HOST:-}
+      - FIDER_HOST=${FIDER_HOST:-}
     networks:
-      - n8n_network
+      - infra_network
     depends_on:
       n8n-hub:
         condition: service_healthy
@@ -128,5 +172,5 @@ volumes:
     name: caddy_config
 
 networks:
-  n8n_network:
+  infra_network:
     driver: bridge
