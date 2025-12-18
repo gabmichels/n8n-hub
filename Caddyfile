@@ -11,17 +11,27 @@
 # Bypasses ad blockers by routing through your domain
 # Uses placeholder when not configured (won't match any real requests)
 {$POSTHOG_PROXY_HOST:posthog-proxy.disabled.local} {
+    # Handle CORS preflight requests
+    @options method OPTIONS
+    handle @options {
+        header Access-Control-Allow-Origin "*"
+        header Access-Control-Allow-Methods "GET, POST, OPTIONS"
+        header Access-Control-Allow-Headers "Content-Type, Authorization"
+        header Access-Control-Max-Age "86400"
+        respond "" 204
+    }
+
     @static path /static/*
     handle @static {
+        header Access-Control-Allow-Origin "*"
         reverse_proxy https://eu-assets.i.posthog.com {
             header_up Host eu-assets.i.posthog.com
-            header_down -Access-Control-Allow-Origin
         }
     }
     handle {
+        header Access-Control-Allow-Origin "*"
         reverse_proxy https://eu.i.posthog.com {
             header_up Host eu.i.posthog.com
-            header_down -Access-Control-Allow-Origin
         }
     }
 }
