@@ -3,14 +3,14 @@
 }
 
 # n8n automation platform
-{ $N8N_HOST:localhost } {
+{$N8N_HOST:localhost} {
     reverse_proxy n8n-hub:5678
 }
 
 # PostHog analytics proxy (EU region)
 # Bypasses ad blockers by routing through your domain
 # Uses placeholder when not configured (won't match any real requests)
-{ $POSTHOG_PROXY_HOST:posthog-proxy.disabled.local } {
+{$POSTHOG_PROXY_HOST:posthog-proxy.disabled.local} {
     # Handle CORS preflight requests
     @options method OPTIONS
     handle @options {
@@ -38,6 +38,6 @@
 
 # Fider feedback platform
 # Uses placeholder when not configured (won't match any real requests)
-{ $FIDER_HOST:fider.disabled.local } {
+{$FIDER_HOST:fider.disabled.local} {
     reverse_proxy fider:3000
 }
