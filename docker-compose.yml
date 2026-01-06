@@ -1,6 +1,6 @@
 services:
   n8n-hub:
-    image: n8nio/n8n
+    image: docker.n8n.io/n8nio/n8n
     restart: unless-stopped
     deploy:
       resources:
