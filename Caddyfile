@@ -34,6 +34,15 @@
             header_down Access-Control-Allow-Origin "*"
         }
     }
+
+    handle_path /yt-proxy/* {
+        reverse_proxy https://www.youtube.com {
+            header_up Host www.youtube.com
+            header_up -X-Forwarded-For
+            header_up -X-Forwarded-Host
+            header_up Cookie "SOCS=CAI"
+        }
+    }
 }
 
 # Fider feedback platform
