@@ -152,6 +152,11 @@ services:
       - PUBLIC_DOMAIN=${PUBLIC_DOMAIN}
       - POSTHOG_PROXY_HOST=${POSTHOG_PROXY_HOST:-}
       - FIDER_HOST=${FIDER_HOST:-}
+      # Kiori public workspace proxy
+      - KIORI_PROXY_MATCHER=${KIORI_PROXY_MATCHER:-*.kiori.disabled.local}
+      - KIORI_API_URL=${KIORI_API_URL:-https://multiworkspace-rag-api-f75y5nmbmq-ez.a.run.app}
+      - KIORI_API_HOST=${KIORI_API_HOST:-multiworkspace-rag-api-f75y5nmbmq-ez.a.run.app}
+      - KIORI_VERIFY_DOMAIN_URL=${KIORI_VERIFY_DOMAIN_URL:-http://localhost:3000/api/internal/verify-domain}
     networks:
       - infra_network
     depends_on:

@@ -1,5 +1,14 @@
 {
     admin off
+
+    # On-demand TLS for kiori.co subdomains and custom domains
+    # Before issuing a cert, Caddy calls the "ask" endpoint to verify the domain
+    # is mapped to a valid public workspace. Prevents cert abuse.
+    on_demand_tls {
+        ask {$KIORI_VERIFY_DOMAIN_URL:http://localhost:3000/api/internal/verify-domain}
+        interval 5m
+        burst 5
+    }
 }
 
 # n8n automation platform
@@ -49,4 +58,25 @@
 # Uses placeholder when not configured (won't match any real requests)
 {$FIDER_HOST:fider.disabled.local} {
     reverse_proxy fider:3000
+}
+
+# Kiori public workspace proxy
+# Handles two types of domains:
+#   1. Subdomains: {handle}.kiori.co (wildcard DNS → this server)
+#   2. Custom domains: docs.example.com (CNAME → domains.kiori.co → this server)
+#
+# Both get auto-provisioned Let's Encrypt certs via on_demand_tls.
+# Caddy calls the "ask" endpoint (configured above) before issuing any cert.
+# All traffic is proxied to the Cloud Run API with the original Host in X-Custom-Domain.
+{$KIORI_PROXY_MATCHER:*.kiori.disabled.local} {
+    tls {
+        on_demand
+    }
+
+    reverse_proxy {$KIORI_API_URL:https://multiworkspace-rag-api-f75y5nmbmq-ez.a.run.app} {
+        header_up Host {$KIORI_API_HOST:multiworkspace-rag-api-f75y5nmbmq-ez.a.run.app}
+        header_up X-Custom-Domain {http.request.host}
+        header_up X-Forwarded-Host {http.request.host}
+        header_up X-Forwarded-Proto {scheme}
+    }
 }
