@@ -73,10 +73,23 @@
         on_demand
     }
 
-    reverse_proxy {$KIORI_API_URL:https://multiworkspace-rag-api-f75y5nmbmq-ez.a.run.app} {
-        header_up Host {$KIORI_API_HOST:multiworkspace-rag-api-f75y5nmbmq-ez.a.run.app}
-        header_up X-Custom-Domain {http.request.host}
-        header_up X-Forwarded-Host {http.request.host}
-        header_up X-Forwarded-Proto {scheme}
+    # Proxy API calls to Cloud Run API
+    handle /api/* {
+        reverse_proxy {$KIORI_API_URL:https://multiworkspace-rag-api-f75y5nmbmq-ez.a.run.app} {
+            header_up Host {$KIORI_API_HOST:multiworkspace-rag-api-f75y5nmbmq-ez.a.run.app}
+            header_up X-Custom-Domain {http.request.host}
+            header_up X-Forwarded-Host {http.request.host}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+
+    # Proxy everything else to Firebase Hosting (serves the SPA)
+    handle {
+        reverse_proxy {$KIORI_WEB_URL:https://cw-rag-kiori-multiworkspace.web.app} {
+            header_up Host {$KIORI_WEB_HOST:cw-rag-kiori-multiworkspace.web.app}
+            header_up X-Custom-Domain {http.request.host}
+            header_up X-Forwarded-Host {http.request.host}
+            header_up X-Forwarded-Proto {scheme}
+        }
     }
 }
